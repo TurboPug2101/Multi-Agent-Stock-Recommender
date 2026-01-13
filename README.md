@@ -18,37 +18,37 @@ This project implements a **multi-agent trading system** that:
 ┌─────────────────────────────────────────────────────────────┐
 │                    FastAPI Backend Server                   │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Orchestrator (DAG Engine)                │   │
-│  │  - Manages agent execution order                      │   │
-│  │  - Handles data flow between agents                   │   │
-│  │  - Tracks execution state                             │   │
+│  │              Orchestrator (DAG Engine)               │   │
+│  │  - Manages agent execution order                     │   │
+│  │  - Handles data flow between agents                  │   │
+│  │  - Tracks execution state                            │   │
 │  └──────────────────────────────────────────────────────┘   │
-│                                                               │
-│                    ┌──────────────┐                          │
-│                    │   Scouting   │                          │
-│                    │    Agent     │                          │
-│                    └──────┬───────┘                          │
-│                           │                                   │
-│              ┌────────────┴────────────┐                     │
-│              │                         │                     │
-│              ▼                         ▼                     │
+│                                                             │
+│                    ┌──────────────┐                         │
+│                    │   Scouting   │                         │
+│                    │    Agent     │                         │
+│                    └──────┬───────┘                         │
+│                           │                                 │
+│              ┌────────────┴────────────┐                    │
+│              │                         │                    │
+│              ▼                         ▼                    │
 │      ┌──────────────┐         ┌──────────────┐              │
 │      │  Technical   │         │  Sentiment   │              │
 │      │    Agent     │         │    Agent     │              │
 │      └──────┬───────┘         └──────┬───────┘              │
-│             │                        │                       │
-│             └────────────┬───────────┘                       │
-│                          │                                   │
-│                          ▼                                   │
+│             │                        │                      │
+│             └────────────┬───────────┘                      │
+│                          │                                  │
+│                          ▼                                  │
 │                  ┌──────────────┐                           │
 │                  │  Strategist  │                           │
 │                  │    Agent     │                           │
 │                  └──────┬───────┘                           │
-│                         │                                    │
-│                         ▼                                    │
+│                         │                                   │
+│                         ▼                                   │
 │                  ┌──────────────┐                           │
 │                  │ Kite Client  │                           │
-│                  │(Paper Trading)│                           │
+│                  │(Paper Trading)│                          │
 │                  └──────────────┘                           │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -171,68 +171,11 @@ graph TD
     Hold --> Result
     Result --> End([End])
     
-    style Scout fill:#e1f5ff
-    style Tech fill:#fff4e1
-    style Sent fill:#ffe1f5
-    style Strat fill:#e1ffe1
-    style Execute fill:#ffcccc
-```
-
-### Detailed Agent Workflow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant API as FastAPI Server
-    participant Orch as Orchestrator
-    participant Scout as Scouting Agent
-    participant Tech as Technical Agent
-    participant Sent as Sentiment Agent
-    participant Strat as Strategist Agent
-    participant Kite as Kite API
-    participant Cache as Cache Layer
-    
-    User->>API: POST /dag/execute
-    API->>Orch: Initialize DAG
-    
-    Orch->>Scout: Execute with initial_input
-    Scout->>Cache: Check cache
-    alt Cache Hit
-        Cache-->>Scout: Return cached data
-    else Cache Miss
-        Scout->>Scout: Screen Nifty 50 stocks
-        Scout->>Cache: Store result
-    end
-    Scout-->>Orch: Shortlisted stocks
-    
-    Orch->>Tech: Execute with stocks
-    Tech->>Tech: Calculate technical indicators
-    Tech-->>Orch: Technical signals
-    
-    Orch->>Sent: Execute with stocks
-    Sent->>Sent: Initialize Tool Registry
-    Sent->>Sent: Reason about data sufficiency
-    loop Until sufficient data
-        Sent->>Sent: Select tool (News/GNews/Reddit)
-        Sent->>Sent: Fetch data
-        Sent->>Sent: Evaluate sufficiency
-    end
-    Sent->>Sent: Analyze sentiment via LLM
-    Sent->>Cache: Store result
-    Sent-->>Orch: Sentiment scores
-    
-    Orch->>Strat: Execute with technical + sentiment
-    Strat->>Strat: Combine signals via LLM
-    Strat->>Strat: Generate trading decisions
-    
-    alt High Confidence (>75%)
-        Strat->>Kite: Execute buy order (paper trading)
-        Kite-->>Strat: Order confirmation
-    end
-    
-    Strat-->>Orch: Trading decisions
-    Orch-->>API: Execution results
-    API-->>User: Return response
+    style Scout fill:#e1f5ff,color:#000000
+    style Tech fill:#fff4e1,color:#000000
+    style Sent fill:#ffe1f5,color:#000000
+    style Strat fill:#e1ffe1,color:#000000
+    style Execute fill:#ffcccc,color:#000000
 ```
 
 ## 🚀 Setup & Installation
@@ -286,135 +229,8 @@ sequenceDiagram
 
 6. **Run the backend server**
    ```bash
-   python main.py
-   # OR
-   ./run.sh
-   # OR
    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
-
-## 📡 API Endpoints
-
-### Base URL
-```
-http://localhost:8000
-```
-
-### Available Endpoints
-
-#### 1. Health Check
-```http
-GET /health
-```
-Returns server health status.
-
-#### 2. Get DAG Information
-```http
-GET /dag/info
-```
-Returns the DAG configuration and structure.
-
-#### 3. Execute DAG (Synchronous)
-```http
-POST /dag/execute
-Content-Type: application/json
-
-{
-  "initial_input": {
-    "top_n": 10
-  }
-}
-```
-Executes the entire DAG workflow synchronously.
-
-#### 4. Execute DAG (Asynchronous)
-```http
-POST /dag/execute/async
-Content-Type: application/json
-
-{
-  "initial_input": {
-    "top_n": 10
-  }
-}
-```
-Executes the DAG workflow asynchronously and returns an execution ID.
-
-#### 5. Get Execution History
-```http
-GET /executions
-```
-Returns list of all execution results.
-
-#### 6. Get Specific Execution
-```http
-GET /executions/{execution_id}
-```
-Returns details of a specific execution.
-
-#### 7. Get All Agents
-```http
-GET /agents
-```
-Returns list of all registered agents.
-
-### Example API Call
-
-Using `curl`:
-```bash
-curl -X POST http://localhost:8000/dag/execute \
-  -H "Content-Type: application/json" \
-  -d '{"initial_input": {"top_n": 10}}'
-```
-
-Using Python:
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/dag/execute",
-    json={"initial_input": {"top_n": 10}}
-)
-print(response.json())
-```
-
-## 🔧 Configuration
-
-### DAG Configuration
-The DAG workflow is defined in `backend/orchestrator/dag.py`. You can modify:
-- Agent execution order
-- Input/output mappings between agents
-- Agent-specific configurations
-
-### Agent Configuration
-Each agent can be configured via:
-- Constructor parameters
-- Factory function arguments
-- Environment variables
-
-### Caching
-- **TTL**: 3 hours (configurable in `common/cache.py`)
-- **Scope**: Per-agent results
-- **Storage**: In-memory (resets on server restart)
-
-## 🧪 Testing
-
-### Manual Testing
-```bash
-# Start the server
-cd backend
-python main.py
-
-# In another terminal, test the API
-curl -X POST http://localhost:8000/dag/execute \
-  -H "Content-Type: application/json" \
-  -d '{"initial_input": {"top_n": 5}}'
-```
-
-### Interactive API Documentation
-Once the server is running, visit:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
 
 ## 📁 Project Structure
 
@@ -470,32 +286,6 @@ Required environment variables (in `backend/.env`):
 | `KITE_API_SECRET` | Zerodha Kite API secret | Optional |
 | `KITE_ACCESS_TOKEN` | Zerodha Kite access token | Optional |
 
-## 🎓 Key Features
-
-### 1. Agentic Architecture
-- Agents can reason about data sufficiency
-- Dynamic tool selection based on context
-- Adaptive behavior (e.g., expanding search timeframe)
-
-### 2. Multi-Source Data Collection
-- News APIs (Event Registry, GNews)
-- Social media (Reddit, Twitter - WIP)
-- Stock data (Yahoo Finance, mock data for development)
-
-### 3. LLM-Powered Decision Making
-- Groq API with Qwen3-32B model
-- Sentiment analysis from unstructured text
-- Trading decision reasoning
-
-### 4. Caching System
-- 3-hour TTL for agent results
-- Reduces redundant API calls
-- Improves response time
-
-### 5. Paper Trading
-- Safe testing environment
-- Zerodha Kite API integration
-- Simulated order execution
 
 ## 🚧 Future Enhancements
 
