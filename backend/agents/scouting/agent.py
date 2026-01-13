@@ -13,6 +13,7 @@ Follows architecture principles:
 
 from typing import Dict, Any
 import logging
+from logging import Logger, getLogger
 # Absolute import - assumes backend directory is on PYTHONPATH
 from common.base_agent import BaseAgent
 
@@ -147,6 +148,7 @@ def create_agent(config: Dict[str, Any] = None) -> ScoutingAgent:
     Returns:
         ScoutingAgent instance
     """
+    logger.info(f"Creating ScoutingAgent with config: {config}")
     # Data provider can be injected via config if needed
     data_provider = config.get('data_provider') if config else None
     return ScoutingAgent(data_provider=data_provider)

@@ -1,14 +1,9 @@
 """
-Orchestrator
 Orchestrator has ONLY 3 responsibilities:
 1. Resolve DAG order
 2. Execute agents
 3. Aggregate outputs
 
-It must NOT:
-- Score stocks
-- Fetch data
-- Decide buy/sell
 """
 
 from typing import Dict, List, Any, Optional
@@ -36,6 +31,7 @@ class Orchestrator:
             dag_config: Optional custom DAG config (uses default if None)
         """
         logger.info("Initializing orchestrator...")
+        # dag config not being passed in production, so using default
         if dag_config:
             from .dag import load_dag_config
             self.dag_config = load_dag_config(dag_config)
@@ -81,10 +77,18 @@ class Orchestrator:
             logger.error(f"Failed to import agent module {node.agent_module}: {str(e)}")
             raise
         
-        # Instantiate agent with config
-        config = node.config or {}
+        # Instantiate agent with config using factory pattern if available
+        config = node.config
         try:
-            agent = agent_class(**config)
+            # Check if module has a create_agent factory function
+            if hasattr(module, 'create_agent'):
+                logger.debug(f"Using factory function create_agent for {agent_id}")
+                # logger.debug(f"Config: {config}")
+                agent = module.create_agent(config)
+            else:
+                # Fall back to direct instantiation
+                logger.debug(f"Using direct instantiation for {agent_id}")
+                agent = agent_class(**config)
             logger.info(f"Successfully instantiated agent: {agent_id}")
         except Exception as e:
             logger.error(f"Failed to instantiate agent {agent_id}: {str(e)}")
@@ -130,14 +134,20 @@ class Orchestrator:
                 # Navigate nested data path
                 data_key = parts[1]
                 source_data = source_result.data
+                logger.debug(f"Looking for key '{data_key}' in source agent '{source_agent_id}' data")
+                logger.debug(f"Available keys in source data: {list(source_data.keys()) if source_data else 'None'}")
+                
                 # Simple path navigation (can be extended for nested paths)
                 if data_key in source_data:
                     input_data[input_key] = source_data[data_key]
+                    logger.debug(f"Mapped {source_agent_id}.{data_key} -> {input_key} (type: {type(source_data[data_key])}, length: {len(source_data[data_key]) if isinstance(source_data[data_key], (list, dict)) else 'N/A'})")
                 else:
                     # Try to get from nested structure
+                    logger.warning(f"Key '{data_key}' not found in source data, using entire data structure")
                     input_data[input_key] = source_data
             else:
                 # Use entire data
+                logger.debug(f"Using entire data from {source_agent_id} for {input_key}")
                 input_data[input_key] = source_result.data
         
         return input_data

@@ -6,7 +6,9 @@ Defines input and output contracts for the scouting agent.
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 from datetime import datetime
+from logging import Logger, getLogger
 
+logger = getLogger(__name__)
 
 @dataclass
 class StockScreeningResult:
@@ -87,8 +89,8 @@ def get_scouting_input_schema() -> Dict[str, Any]:
                 'type': 'integer',
                 'description': 'Number of stocks to shortlist (1-50)',
                 'minimum': 1,
-                'maximum': 15,
-                'default': 5
+                'maximum': 50,
+                'default': 10
             }
         },
         'required': [],

@@ -26,15 +26,15 @@ TRADING_DAG_CONFIG = {
             'config': None,
             'input_mapping': None  # Root node, no inputs from other agents
         },
-        # {
-        #     'agent_id': 'technical',
-        #     'agent_module': 'agents.technical.agent',
-        #     'agent_class': 'TechnicalAgent',
-        #     'config': None,
-        #     'input_mapping': {
-        #         'stocks': 'scouting.shortlisted_stocks'  # Maps scouting output to technical input
-        #     }
-        # },
+        {
+            'agent_id': 'technical',
+            'agent_module': 'agents.technical.technical_agent',
+            'agent_class': 'TechnicalAgent',
+            'config': None,
+            'input_mapping': {
+                'stocks': 'scouting.shortlisted_stocks'  # Maps scouting output to technical input
+            }
+        },
         # {
         #     'agent_id': 'fundamental',
         #     'agent_module': 'agents.fundamental.agent',
@@ -44,15 +44,15 @@ TRADING_DAG_CONFIG = {
         #         'stocks': 'scouting.shortlisted_stocks'
         #     }
         # },
-        # {
-        #     'agent_id': 'sentiment',
-        #     'agent_module': 'agents.sentiment.agent',
-        #     'agent_class': 'SentimentAgent',
-        #     'config': None,
-        #     'input_mapping': {
-        #         'stocks': 'scouting.shortlisted_stocks'
-        #     }
-        # },
+        {
+            'agent_id': 'sentiment',
+            'agent_module': 'agents.sentiment.sentiment_agent',
+            'agent_class': 'SentimentAgent',
+            'config': None,
+            'input_mapping': {
+                'stocks': 'scouting.shortlisted_stocks'
+            }
+        },
         # {
         #     'agent_id': 'strategist',
         #     'agent_module': 'agents.strategist.agent',
@@ -68,13 +68,31 @@ TRADING_DAG_CONFIG = {
     ],
     'edges': [
         {'from': 'scouting', 'to': 'technical'},
+        {'from': 'scouting', 'to': 'sentiment'},
     #     {'from': 'scouting', 'to': 'fundamental'},
-    #     {'from': 'scouting', 'to': 'sentiment'},
     #     {'from': 'technical', 'to': 'strategist'},
     #     {'from': 'fundamental', 'to': 'strategist'},
     #     {'from': 'sentiment', 'to': 'strategist'}
     ]
 }
+
+
+# Before (dict):                           After (DAGConfig object):
+# ─────────────                           ──────────────────────────
+
+# {                                       DAGConfig
+#   'name': 'trading...',       →           ├─ name: str = 'trading...'
+#   'description': '...',       →           ├─ description: str = '...'
+#   'nodes': [                  →           ├─ nodes: List[AgentNode]
+#     {                         →           │   └─ [0] AgentNode
+#       'agent_id': 'scouting', →           │         ├─ agent_id: str = 'scouting'
+#       'agent_module': '...',  →           │         ├─ agent_module: str = 'agents.scouting.agent'
+#       'agent_class': '...',   →           │         ├─ agent_class: str = 'ScoutingAgent'
+#       'config': None,         →           │         ├─ config: Optional[Dict] = None
+#       'input_mapping': None   →           │         └─ input_mapping: Optional[Dict] = None
+#     }                         →           │
+#   ],                          →           │
+#   'edges': [...]              →           └─ edges: List[Dict] = [{'from': 'scouting
 
 
 def load_dag_config(config: Dict) -> DAGConfig:
