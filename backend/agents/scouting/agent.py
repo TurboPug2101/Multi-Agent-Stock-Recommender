@@ -16,14 +16,13 @@ import logging
 from logging import Logger, getLogger
 # Absolute import - assumes backend directory is on PYTHONPATH
 from common.base_agent import BaseAgent
+from common.cache import get_cache
 
 logger = logging.getLogger(__name__)
 from .schemas import (
     ScoutingAgentInput,
     ScoutingAgentOutput,
-    StockScreeningResult,
-    get_scouting_input_schema,
-    get_scouting_output_schema
+    StockScreeningResult
 )
 from .tools import (
     get_nifty50_symbols,
@@ -66,28 +65,11 @@ class ScoutingAgent(BaseAgent):
         except (KeyError, TypeError, ValueError):
             return False
     
-    def get_input_schema(self) -> Dict[str, Any]:
-        """
-        Return the input schema definition.
-        
-        Returns:
-            Dict describing the expected input structure
-        """
-        return get_scouting_input_schema()
-    
-    def get_output_schema(self) -> Dict[str, Any]:
-        """
-        Return the output schema definition.
-        
-        Returns:
-            Dict describing the output structure
-        """
-        return get_scouting_output_schema()
-    
     def run(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Main execution method.
         Stateless, deterministic, no side effects.
+        Uses caching to avoid redundant calculations (cache valid for 3 hours).
         
         Args:
             input_data: Validated input data conforming to input schema
@@ -100,6 +82,17 @@ class ScoutingAgent(BaseAgent):
         # Parse input using schema
         scouting_input = ScoutingAgentInput.from_dict(input_data)
         logger.info(f"Scouting input - top_n: {scouting_input.top_n}")
+        
+        # Check cache (valid for 3 hours)
+        cache = get_cache()
+        cache_key = cache.generate_key('scouting', top_n=scouting_input.top_n)
+        
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            logger.info(f"Using cached scouting result (valid for 3 hours)")
+            return cached_result
+        
+        logger.info("Cache miss - computing scouting result")
         
         # Get Nifty 50 symbols
         logger.info("Fetching Nifty 50 stock symbols...")
@@ -132,10 +125,15 @@ class ScoutingAgent(BaseAgent):
             }
         )
         
+        # Cache the result (valid for 3 hours)
+        output_dict = output.to_dict()
+        cache.set(cache_key, output_dict)
+        logger.info("Cached scouting result for 3 hours")
+        
         logger.info("Scouting agent execution completed successfully")
         
         # Return as dictionary
-        return output.to_dict()
+        return output_dict
 
 
 def create_agent(config: Dict[str, Any] = None) -> ScoutingAgent:

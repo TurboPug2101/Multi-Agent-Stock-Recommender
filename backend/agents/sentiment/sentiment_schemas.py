@@ -81,38 +81,3 @@ class SentimentAgentOutput:
         return asdict(self)
 
 
-def get_sentiment_input_schema() -> Dict[str, Any]:
-    """Return input schema definition."""
-    return {
-        'type': 'object',
-        'properties': {
-            'stocks': {
-                'type': 'array',
-                'description': 'List of shortlisted stocks from scouting agent',
-                'items': {
-                    'type': 'object',
-                    'properties': {
-                        'symbol': {'type': 'string'},
-                        'name': {'type': 'string'},
-                        'current_price': {'type': 'number'}
-                    }
-                }
-            }
-        },
-        'required': ['stocks']
-    }
-
-
-def get_sentiment_output_schema() -> Dict[str, Any]:
-    """Return output schema definition."""
-    return {
-        'type': 'object',
-        'properties': {
-            'analyzed_stocks': {'type': 'array'},
-            'total_analyzed': {'type': 'integer'},
-            'positive_count': {'type': 'integer'},
-            'negative_count': {'type': 'integer'},
-            'neutral_count': {'type': 'integer'}
-        },
-        'required': ['analyzed_stocks', 'total_analyzed', 'positive_count', 'negative_count', 'neutral_count']
-    }

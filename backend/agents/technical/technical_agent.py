@@ -40,40 +40,6 @@ class TechnicalAgent(BaseAgent):
         except:
             return False
     
-    def get_input_schema(self) -> Dict[str, Any]:
-        """Return input schema."""
-        return {
-            'type': 'object',
-            'properties': {
-                'stocks': {
-                    'type': 'array',
-                    'description': 'List of shortlisted stocks from scouting agent',
-                    'items': {
-                        'type': 'object',
-                        'properties': {
-                            'symbol': {'type': 'string'},
-                            'name': {'type': 'string'},
-                            'current_price': {'type': 'number'}
-                        }
-                    }
-                }
-            },
-            'required': ['stocks']
-        }
-    
-    def get_output_schema(self) -> Dict[str, Any]:
-        """Return output schema."""
-        return {
-            'type': 'object',
-            'properties': {
-                'analyzed_stocks': {'type': 'array'},
-                'total_analyzed': {'type': 'integer'},
-                'bullish_count': {'type': 'integer'},
-                'bearish_count': {'type': 'integer'},
-                'neutral_count': {'type': 'integer'}
-            }
-        }
-    
     def run(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Main execution method.

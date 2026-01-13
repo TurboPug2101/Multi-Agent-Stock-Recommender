@@ -65,9 +65,7 @@ class Orchestrator:
         if not node:
             logger.error(f"Agent node not found: {agent_id}")
             raise ValueError(f"Agent node not found: {agent_id}")
-        
-        logger.debug(f"Agent config - module: {node.agent_module}, class: {node.agent_class}, config: {node.config}")
-        
+                
         # Dynamically import agent module
         try:
             module = importlib.import_module(node.agent_module)

@@ -53,22 +53,22 @@ TRADING_DAG_CONFIG = {
                 'stocks': 'scouting.shortlisted_stocks'
             }
         },
-        # {
-        #     'agent_id': 'strategist',
-        #     'agent_module': 'agents.strategist.agent',
-        #     'agent_class': 'StrategistAgent',
-        #     'config': None,
-        #     'input_mapping': {
-        #         'scouting': 'scouting.data',
-        #         'technical': 'technical.data',
-        #         'fundamental': 'fundamental.data',
-        #         'sentiment': 'sentiment.data'
-        #     }
-        # }
+        {
+            'agent_id': 'strategist',
+            'agent_module': 'agents.strategist.agent',
+            'agent_class': 'StrategistAgent',
+            'config': {'paper_trading': True, 'min_confidence_threshold': 0.75},
+            'input_mapping': {
+                'technical': 'technical',
+                'sentiment': 'sentiment'
+            }
+        }
     ],
     'edges': [
         {'from': 'scouting', 'to': 'technical'},
         {'from': 'scouting', 'to': 'sentiment'},
+        {'from': 'technical', 'to': 'strategist'},
+        {'from': 'sentiment', 'to': 'strategist'},
     #     {'from': 'scouting', 'to': 'fundamental'},
     #     {'from': 'technical', 'to': 'strategist'},
     #     {'from': 'fundamental', 'to': 'strategist'},

@@ -38,26 +38,6 @@ class BaseAgent(ABC):
         pass
     
     @abstractmethod
-    def get_input_schema(self) -> Dict[str, Any]:
-        """
-        Return the input schema definition for this agent.
-        
-        Returns:
-            Dict describing the expected input structure
-        """
-        pass
-    
-    @abstractmethod
-    def get_output_schema(self) -> Dict[str, Any]:
-        """
-        Return the output schema definition for this agent.
-        
-        Returns:
-            Dict describing the output structure
-        """
-        pass
-    
-    @abstractmethod
     def run(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Main execution method. Must be:
